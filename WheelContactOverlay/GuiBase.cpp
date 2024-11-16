@@ -103,6 +103,7 @@ void WheelContactOverlay::RenderSettings() {
 		WriteSettings();
 	}
 
+
 	if (settings.WheelOverlay.ShowWindow) {
 		ImGui::Indent(18);
 
