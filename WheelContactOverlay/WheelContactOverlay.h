@@ -12,25 +12,14 @@ constexpr auto plugin_version = stringify(VERSION_MAJOR) "." stringify(VERSION_M
 #include <fstream>
 
 class WheelContactOverlay: public BakkesMod::Plugin::BakkesModPlugin
-	,public SettingsWindowBase // Uncomment if you wanna render your own tab in the settings menu
-	,public PluginWindowBase // Uncomment if you want to render your own plugin window
+	,public SettingsWindowBase
+	,public PluginWindowBase
 {
 
 	void onLoad() override;
 
-
-
 public:
-
-	struct SetGamePausedParams {
-		bool bPaused;
-	};
-
-public:
-	// std::vector is slow
-	//std::vector<WheelContactData> Wheels;
 	std::array<WheelContactData, 4> Wheels;
-	
 	bool CanShowWindow = true;
 
 public:
@@ -48,6 +37,6 @@ public:
 	Settings settings;
 
 public:
-	void RenderSettings() override; // Uncomment if you wanna render your own tab in the settings menu
-	void RenderWindow() override; // Uncomment if you want to render your own plugin window
+	void RenderSettings() override;
+	void RenderWindow() override;
 };

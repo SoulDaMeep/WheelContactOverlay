@@ -11,7 +11,6 @@
 #include "RenderingTools/Extra/RenderingMath.h"
 using namespace RT;
 
-
 BAKKESMOD_PLUGIN(WheelContactOverlay, "WheelContactOverlay: Displays the contact of each wheel on the local car.", plugin_version, PLUGINTYPE_FREEPLAY)
 
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
@@ -50,6 +49,7 @@ void WheelContactOverlay::onLoad()
 			// Dont want to get the caller CarWrapper because I want to keep it to the local car.
 			GetWheelData(gameWrapper->GetLocalCar());
 		}
+
 		else if (gameWrapper->IsInReplay()) {
 			ServerWrapper server = gameWrapper->GetGameEventAsReplay();
 			if (!server) return;
@@ -60,6 +60,7 @@ void WheelContactOverlay::onLoad()
 			ViewTarget target = camera.GetViewTarget();
 
 			for (CarWrapper car : server.GetCars()) {
+				// if the memory address matches the target that the camera is spectating
 				if (reinterpret_cast<void*>(car.memory_address) == target.Target) {
 					GetWheelData(car);
 				}
@@ -112,6 +113,7 @@ bool WheelContactOverlay::IsValidEnv() {
 	return isValidEnv;
 }
 /////////////////////////////// NUMERIC WHEEL RENDERING /////////////////////////////////////////
+
 void WheelContactOverlay::RenderWheelNumericData(CanvasWrapper canvas, Vector2F& Offset, WheelContactData wheel, int i) {
 	if (settings.NumericWheelData.StaticPosition) {
 		NumericDataAtPos(canvas, Offset, wheel, i);
