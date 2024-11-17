@@ -32,6 +32,7 @@ public:
 	std::array<WheelContactData, 4> Wheels;
 	
 	bool CanShowWindow = true;
+
 public:
 	bool IsValidEnv();
 	void RenderWheelNumericData(CanvasWrapper canvas, Vector2F& Offset, WheelContactData wheel, int i);
