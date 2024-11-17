@@ -27,10 +27,10 @@ void WheelContactOverlay::onLoad()
 	}
 	
 	LoadSettings();
+
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {
 		if (settings.WheelOverlay.ShowWindow) {
-			// bakkesmod doesnt load the gui before the main class (i think)(could be clickbait idk)
-
+			// Bakkesmod doesnt load the gui before the main class (i think)(could be clickbait idk)
 			cvarManager->executeCommand("togglemenu WheelContactOverlay");
 			LOG("Loaded");
 		}
@@ -39,33 +39,16 @@ void WheelContactOverlay::onLoad()
 	gameWrapper->HookEvent("Function Engine.Interaction.Tick", [this](std::string eventName) {
 		if (!settings.Enabled) return;
 
-		CanShowWindow = !gameWrapper->IsPaused();
-		// if its not allowed to show, clear the list.
-		if (!CanShowWindow) {
-			Wheels.fill(WheelContactData{});
-		}
+		CanShowWindow = true;
 
-		// set conditions to not show overlay
-		if (!gameWrapper->IsInFreeplay() && !gameWrapper->IsInReplay() && !gameWrapper->IsInCustomTraining()) {
-			if (gameWrapper->GetCurrentMap() == "menu_main_p") CanShowWindow = false;
-			else if (gameWrapper->IsInOnlineGame()) CanShowWindow = false;
+		if (IsValidEnv() == false || gameWrapper->IsPaused()) {
+			CanShowWindow = false;
 			return;
 		}
-		
+
 		if (gameWrapper->IsInFreeplay() || gameWrapper->IsInCustomTraining()) {
-
 			// Dont want to get the caller CarWrapper because I want to keep it to the local car.
-			CarWrapper car = gameWrapper->GetLocalCar();
-			if (!car) return;
-
-			VehicleSimWrapper vehiclesim = car.GetVehicleSim();
-			if (!vehiclesim) return;
-
-			ArrayWrapper<WheelWrapper> wheels = vehiclesim.GetWheels();
-
-			for (size_t i = 0; i < wheels.Count(); i++) {
-				Wheels[i] = wheels.Get(i).GetContact();
-			}
+			GetWheelData(gameWrapper->GetLocalCar());
 		}
 		else if (gameWrapper->IsInReplay()) {
 			ServerWrapper server = gameWrapper->GetGameEventAsReplay();
@@ -73,20 +56,12 @@ void WheelContactOverlay::onLoad()
 
 			CameraWrapper camera = gameWrapper->GetCamera();
 			if (!camera) return;
-			ViewTarget target = camera.GetViewTarget();
 
+			ViewTarget target = camera.GetViewTarget();
 
 			for (CarWrapper car : server.GetCars()) {
 				if (reinterpret_cast<void*>(car.memory_address) == target.Target) {
-
-					VehicleSimWrapper vehiclesim = car.GetVehicleSim();
-					if (!vehiclesim) return;
-
-					ArrayWrapper<WheelWrapper> wheels = vehiclesim.GetWheels();
-
-					for (size_t i = 0; i < wheels.Count(); i++) {
-						Wheels[i] = wheels.Get(i).GetContact();
-					}
+					GetWheelData(car);
 				}
 			}
 		}
@@ -94,95 +69,110 @@ void WheelContactOverlay::onLoad()
 
 	gameWrapper->RegisterDrawable([this](CanvasWrapper canvas) {
 		if (!settings.Enabled) return;
-		if (!gameWrapper->IsInFreeplay() && !gameWrapper->IsInReplay() && !gameWrapper->IsInCustomTraining()) return;
 		if (!CanShowWindow) return;
+		if (IsValidEnv() == false) return;
+		
 		CameraWrapper camera = gameWrapper->GetCamera();
 		Frustum frust{ canvas, camera };
+		Vector2F Offset = settings.NumericWheelData.StaticPos;
 
 		for (size_t i = 0; i < Wheels.size(); i++) {
-
-
-
 			if (Wheels[i].bHasContact) {
-
-
 				if (settings.NumericWheelData.Enabled) {
-					canvas.SetColor
-					(LinearColor
-						{
-							settings.NumericWheelData.Color.R * 255,
-							settings.NumericWheelData.Color.G * 255,
-							settings.NumericWheelData.Color.B * 255,
-							settings.NumericWheelData.Color.A * 255
-						}
-					);
 
-					if (settings.NumericWheelData.StaticPosition) {
-						Vector2F Offset = settings.NumericWheelData.StaticPos;
-						float scale = settings.NumericWheelData.Scale;
-						for (int i = 0; i < Wheels.size(); i++) {
-							if (Wheels[i].bHasContact) {
-								canvas.SetPosition(Offset);
-								canvas.DrawString(std::format("Wheel {}", i+1), scale, scale);
-								Offset += Vector2{ 0, int(12 * scale) };
-								canvas.SetPosition(Offset);
-								canvas.DrawString(std::format("X: {:.3f}", Wheels[i].Location.X), scale, scale);
-								Offset += Vector2{ 0, int(12 * scale)};
+					canvas.SetColor(settings.NumericWheelData.Color * 255);
 
-								canvas.SetPosition(Offset);
-								canvas.DrawString(std::format("Y: {:.3f}", Wheels[i].Location.Y), scale, scale);
-								Offset += Vector2{ 0, int(12 * scale)};
-
-								canvas.SetPosition(Offset);
-								canvas.DrawString(std::format("Z: {:.3f}", Wheels[i].Location.Z), scale, scale);
-								Offset += Vector2{ 0, int(12 * scale)};
-							}
-							
-						}
-
-					}
-
-					if (settings.NumericWheelData.Wheels) {
-
-						Vector2F p = canvas.ProjectF(Wheels[i].Location);
-				
-
-						canvas.SetPosition(Vector2F{ p.X, p.Y - (-2 * 10) });
-						canvas.DrawString(std::format("Normal: ({:.3f} {:.3f} {:.3f})", Wheels[i].Normal.X, Wheels[i].Normal.Y, Wheels[i].Normal.Z));
-						canvas.SetPosition(Vector2F{ p.X, p.Y - (1 * 10) });
-						canvas.DrawString(std::format("X: {:.3f}", Wheels[i].Location.X), 1, 1);
-						canvas.SetPosition(Vector2F{ p.X, p.Y - (0 * 10) });
-						canvas.DrawString(std::format("Y: {:.3f}", Wheels[i].Location.Y), 1, 1);
-						canvas.SetPosition(Vector2F{ p.X, p.Y - (-1 * 10) });
-						canvas.DrawString(std::format("Z: {:.3f}", Wheels[i].Location.Z), 1,1);
-					}
+					RenderWheelNumericData(canvas, Offset, Wheels[i], i);
 				}
 				
-				canvas.SetColor
-				(LinearColor
-					{
-						settings.PhysicalWheelOverlay.VectorCol.R * 255,
-						settings.PhysicalWheelOverlay.VectorCol.G * 255,
-						settings.PhysicalWheelOverlay.VectorCol.B * 255,
-						settings.PhysicalWheelOverlay.VectorCol.A * 255
-					}
-				);
-
+				canvas.SetColor(settings.PhysicalWheelOverlay.VectorCol * 255);
+		
 				if (settings.PhysicalWheelOverlay.ShowGrid) {
 					// Thank you CinderBlocc
 					RT::Matrix3 mat3 = RT::Matrix3(Wheels[i].Normal, Wheels[i].LongDirection, Wheels[i].LatDirection);
 					Quat rot = mat3.ToQuat();
 					RT::Grid(Wheels[i].Location, rot, 35, 20, 5, 3).Draw(canvas, frust);
 				} 
+
 				if (settings.PhysicalWheelOverlay.ShowNormal) {
 					RT::Line(Wheels[i].Location, Wheels[i].Location + (Wheels[i].Normal * 25), 2.0f).Draw(canvas);
 				}
 			}
-			
 		}
 	});
 }
 
+////////////////// HELPER /////////////////////////////////
+
+bool WheelContactOverlay::IsValidEnv() {
+	bool isValidEnv = gameWrapper->IsInFreeplay()
+		|| gameWrapper->IsInReplay()
+		|| gameWrapper->IsInCustomTraining();
+
+	return isValidEnv;
+}
+/////////////////////////////// NUMERIC WHEEL RENDERING /////////////////////////////////////////
+void WheelContactOverlay::RenderWheelNumericData(CanvasWrapper canvas, Vector2F& Offset, WheelContactData wheel, int i) {
+	if (settings.NumericWheelData.StaticPosition) {
+		NumericDataAtPos(canvas, Offset, wheel, i);
+	}
+
+	if (settings.NumericWheelData.Wheels) {
+		NumericDataAtWheels(canvas, wheel);
+	}
+}
+
+void WheelContactOverlay::NumericDataAtPos(CanvasWrapper canvas, Vector2F& Offset, WheelContactData wheel, int i) {
+
+	float scale = settings.NumericWheelData.Scale;
+
+	canvas.SetPosition(Offset);
+	canvas.DrawString(std::format("Wheel {}", i + 1), scale, scale);
+	Offset += Vector2{ 0, int(12 * scale) };
+
+	canvas.SetPosition(Offset);
+	canvas.DrawString(std::format("X: {:.3f}", wheel.Location.X), scale, scale);
+	Offset += Vector2{ 0, int(12 * scale) };
+
+	canvas.SetPosition(Offset);
+	canvas.DrawString(std::format("Y: {:.3f}", wheel.Location.Y), scale, scale);
+	Offset += Vector2{ 0, int(12 * scale) };
+
+	canvas.SetPosition(Offset);
+	canvas.DrawString(std::format("Z: {:.3f}", wheel.Location.Z), scale, scale);
+	Offset += Vector2{ 0, int(12 * scale) };
+
+}
+
+void WheelContactOverlay::NumericDataAtWheels(CanvasWrapper canvas, WheelContactData wheel) {
+	Vector2F p = canvas.ProjectF(wheel.Location);
+
+	canvas.SetPosition(Vector2F{ p.X, p.Y - (-2 * 10) });
+	canvas.DrawString(std::format("Normal: ({:.3f} {:.3f} {:.3f})", wheel.Normal.X, wheel.Normal.Y, wheel.Normal.Z));
+	canvas.SetPosition(Vector2F{ p.X, p.Y - (1 * 10) });
+	canvas.DrawString(std::format("X: {:.3f}", wheel.Location.X), 1, 1);
+	canvas.SetPosition(Vector2F{ p.X, p.Y - (0 * 10) });
+	canvas.DrawString(std::format("Y: {:.3f}", wheel.Location.Y), 1, 1);
+	canvas.SetPosition(Vector2F{ p.X, p.Y - (-1 * 10) });
+	canvas.DrawString(std::format("Z: {:.3f}", wheel.Location.Z), 1, 1);
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+void WheelContactOverlay::GetWheelData(CarWrapper car) {
+
+	if (!car) return;
+
+	VehicleSimWrapper vehiclesim = car.GetVehicleSim();
+	if (!vehiclesim) return;
+
+	ArrayWrapper<WheelWrapper> wheels = vehiclesim.GetWheels();
+
+	for (size_t i = 0; i < wheels.Count(); i++) {
+		Wheels[i] = wheels.Get(i).GetContact();
+	}
+}
+
+///////////////////////// Settings Editing with Nlohmann /////////////////////////////////////
 void WheelContactOverlay::DefaultSettings() {
 	auto file = std::ofstream(saveFile);
 
@@ -207,6 +197,7 @@ void WheelContactOverlay::DefaultSettings() {
 	settings.NumericWheelData.Enabled = false;
 	settings.NumericWheelData.Color = LinearColor{ 1, 1, 1, 1 };
 	settings.NumericWheelData.StaticPos = Vector2F{ 0, 0 };
+	settings.NumericWheelData.Scale = 1.0f;
 
 	if (file.is_open()) {
 		WriteSettings();

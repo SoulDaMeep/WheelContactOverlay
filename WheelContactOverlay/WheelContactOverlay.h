@@ -18,6 +18,16 @@ class WheelContactOverlay: public BakkesMod::Plugin::BakkesModPlugin
 
 	void onLoad() override;
 
+	bool IsValidEnv();
+
+	void RenderWheelNumericData(CanvasWrapper canvas, Vector2F& Offset, WheelContactData wheel, int i);
+
+	void NumericDataAtPos(CanvasWrapper canvas, Vector2F& Offset, WheelContactData wheel, int i);
+
+	void NumericDataAtWheels(CanvasWrapper canvas, WheelContactData wheel);
+
+	void GetWheelData(CarWrapper car);
+
 
 public:
 
