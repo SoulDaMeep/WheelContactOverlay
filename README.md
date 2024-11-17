@@ -11,3 +11,8 @@ Features:
 - 3D rendering around the wheels to show the plane of collision and normal
 
 ![untitled](https://github.com/user-attachments/assets/ec1b4b73-4bd4-4a18-bd34-efae4ddc127e)
+
+Commonly Asked Questions:
+- Why does the 3D wheel overlay lag behind or is stuttery?
+    Your framerate doesnt match the framerate at which it is drawn.
+    Framerates that give smooth output: 30, 60, 120 . . .
