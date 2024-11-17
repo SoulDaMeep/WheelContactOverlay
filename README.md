@@ -1,6 +1,6 @@
 # WheelContactOverlay
 
-Code writen by SoulDaMeep (Discord: souldameep)
+Code writen by SoulDaMeep (Discord: souldameep) \
 Thumbnails and art by Kandda (Discord: kandda.) 
 
 A plugin that allows you to view the contact between the car's wheels and any surface.
