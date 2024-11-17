@@ -5,7 +5,8 @@
 
 # BakkesMod build directory
 ./plugins/*
-
+./.gitignore
+./.gitattributes
 # User-specific files
 *.rsuser
 *.suo
