@@ -112,6 +112,7 @@ bool WheelContactOverlay::IsValidEnv() {
 
 	return isValidEnv;
 }
+
 /////////////////////////////// NUMERIC WHEEL RENDERING /////////////////////////////////////////
 
 void WheelContactOverlay::RenderWheelNumericData(CanvasWrapper canvas, Vector2F& Offset, WheelContactData wheel, int i) {
