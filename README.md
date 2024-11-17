@@ -16,3 +16,9 @@ Commonly Asked Questions:
 - Why does the 3D wheel overlay lag behind or is stuttery?
     Your framerate doesnt match the framerate at which it is drawn.
     Framerates that give smooth output: 30, 60, 120 . . .
+  
+- Why doesnt it work in online games?
+    Being able to see which wheel that is currently making contact
+    could be used to determine if the user has gotten a flip reset
+    which could be against TOS as that could give a competitive
+    advantage.
