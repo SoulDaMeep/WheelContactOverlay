@@ -161,9 +161,15 @@ void WheelContactOverlay::RenderSettings() {
 		settings.PhysicalWheelOverlay.VectorCol.A 
 	};
 	ImGui::Separator();
-	ImGui::Text("Show Location|Normal of the Wheels");
+	ImGui::Text("Show Location|Normal of the Wheels contact");
 	if (ImGui::Checkbox("Show Numeric Data of Wheels", &settings.NumericWheelData.Enabled)) WriteSettings();
 	if (settings.NumericWheelData.Enabled) {
+		float NumericColor[4] = {
+			settings.NumericWheelData.Color.R,
+			settings.NumericWheelData.Color.G,
+			settings.NumericWheelData.Color.B,
+			settings.NumericWheelData.Color.A
+		};
 		ImGui::Indent(18);
 		if (ImGui::RadioButton("Show at Wheels", settings.NumericWheelData.Wheels)) {
 			settings.NumericWheelData.Wheels = true;
@@ -188,7 +194,14 @@ void WheelContactOverlay::RenderSettings() {
 			}
 		}
 
-
+		if (ImGui::ColorEdit4("NumberDataCol", NumericColor)) {
+			settings.NumericWheelData.Color.R = NumericColor[0];
+			settings.NumericWheelData.Color.G = NumericColor[1];
+			settings.NumericWheelData.Color.B = NumericColor[2];
+			settings.NumericWheelData.Color.A = NumericColor[3];
+			WriteSettings();
+		}
+		
 
 		ImGui::Indent(-18);
 	}

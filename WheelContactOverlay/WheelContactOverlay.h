@@ -17,7 +17,7 @@ class WheelContactOverlay: public BakkesMod::Plugin::BakkesModPlugin
 {
 
 	void onLoad() override;
-
+	void onUnload() override;
 public:
 	std::array<WheelContactData, 4> Wheels;
 	bool CanShowWindow = true;

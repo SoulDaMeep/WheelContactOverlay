@@ -14,7 +14,11 @@ using namespace RT;
 BAKKESMOD_PLUGIN(WheelContactOverlay, "WheelContactOverlay: Displays the contact of each wheel on the local car.", plugin_version, PLUGINTYPE_FREEPLAY)
 
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
-
+void WheelContactOverlay::onUnload() {
+	if (settings.WheelOverlay.ShowWindow) {
+		cvarManager->executeCommand("togglemenu WheelcontactOverlay");
+	}
+}
 void WheelContactOverlay::onLoad()
 {
 	_globalCvarManager = cvarManager;
